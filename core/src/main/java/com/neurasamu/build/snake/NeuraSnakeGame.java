@@ -1,9 +1,9 @@
-package com.neonviper.game;
+package com.neurasamu.build.snake;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 
-public class NeonViperGame extends Game {
+public class NeuraSnakeGame extends Game {
     public ModelBatch modelBatch;
 
     @Override
@@ -14,6 +14,7 @@ public class NeonViperGame extends Game {
 
     @Override
     public void dispose() {
+        if (getScreen() != null) getScreen().dispose();
         modelBatch.dispose();
     }
 }

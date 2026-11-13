@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.neonviper.game'
+    namespace 'com.neurasamu.build.snake'
     compileSdk 34
     defaultConfig {
-        applicationId "com.neonviper.game"
+        applicationId "com.neurasamu.build.snake"
         minSdk 21
         targetSdk 34
         versionCode 1

@@ -1,4 +1,4 @@
-package com.neonviper.game;
+package com.neurasamu.build.snake;
 
 import android.os.Bundle;
 import com.badlogic.gdx.backends.android.AndroidApplication;
@@ -11,6 +11,8 @@ public class AndroidLauncher extends AndroidApplication {
         AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
         config.useAccelerometer = false;
         config.useCompass = false;
-        initialize(new NeonViperGame(), config);
+        config.useGyroscope = false;
+        config.useImmersiveMode = true;
+        initialize(new NeuraSnakeGame(), config);
     }
 }
