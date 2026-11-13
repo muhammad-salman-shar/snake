@@ -20,6 +20,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
@@ -113,12 +114,16 @@ public class GameScreen extends InputAdapter implements Screen {
         camera.far = 650f;
         camera.position.set(0, CAM_UP, -CAM_BACK);
         camera.lookAt(0, SNAKE_Y + 1.2f, CAM_AHEAD);
+        camera.updateProjectionMatrix();
         camera.update();
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.45f, 0.45f, 0.55f, 1f));
         environment.add(new DirectionalLight().set(1f, 1f, 1f, -0.5f, -1f, -0.2f));
         environment.add(new DirectionalLight().set(0.9f, 0.2f, 0.6f, 0.8f, -0.6f, 0.5f));
+        PointLight pLight = new PointLight();
+        pLight.set(0.16f, 1f, 0.69f, 10f, 0f, 0f, 0f);
+        environment.add(pLight);
 
         batch = new SpriteBatch();
         font = new BitmapFont();
@@ -139,7 +144,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
         Material groundMat = new Material(ColorAttribute.createDiffuse(new Color(0.04f, 0.09f, 0.19f, 1f)));
         Model groundModel = mb.createCylinder(ARENA_RADIUS * 2f, 0.1f, ARENA_RADIUS * 2f, 64,
-                groundMat, Usage.Position | Usage.Normal);
+                groundMat, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
         models.add(groundModel);
         groundInstance = new ModelInstance(groundModel);
 
@@ -147,7 +152,7 @@ public class GameScreen extends InputAdapter implements Screen {
                 ColorAttribute.createDiffuse(new Color(1f, 0.33f, 0.53f, 1f)),
                 ColorAttribute.createEmissive(new Color(0.7f, 0.1f, 0.3f, 1f)));
         Model postModel = mb.createBox(0.5f, 3f, 0.5f, postMat,
-                Usage.Position | Usage.Normal);
+                Usage.Position | Usage.Normal | Usage.TextureCoordinates);
         models.add(postModel);
         int postCount = 90;
         for (int i = 0; i < postCount; i++) {
@@ -162,14 +167,14 @@ public class GameScreen extends InputAdapter implements Screen {
                 ColorAttribute.createDiffuse(new Color(0.16f, 1f, 0.69f, 1f)),
                 ColorAttribute.createEmissive(new Color(0.05f, 0.6f, 0.4f, 1f)));
         Model headModel = mb.createSphere(HEAD_RADIUS * 2f, HEAD_RADIUS * 2f, HEAD_RADIUS * 2f,
-                20, 16, headMat, Usage.Position | Usage.Normal);
+                20, 16, headMat, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
         models.add(headModel);
         headInstance = new ModelInstance(headModel);
         headInstance.transform.setToTranslation(0, SNAKE_Y, 0);
 
         Model segModel = mb.createSphere(1f, 1f, 1f, 10, 8,
                 new Material(ColorAttribute.createDiffuse(Color.WHITE)),
-                Usage.Position | Usage.Normal);
+                Usage.Position | Usage.Normal | Usage.TextureCoordinates);
         models.add(segModel);
         for (int i = 0; i < SEGMENT_POOL; i++) {
             ModelInstance mi = new ModelInstance(segModel);
@@ -188,7 +193,7 @@ public class GameScreen extends InputAdapter implements Screen {
                 ColorAttribute.createDiffuse(new Color(1f, 0.82f, 0.40f, 1f)),
                 ColorAttribute.createEmissive(new Color(1f, 0.54f, 0f, 1f)));
         Model foodModel = mb.createSphere(FOOD_RADIUS * 2f, FOOD_RADIUS * 2f, FOOD_RADIUS * 2f,
-                6, 5, foodMat, Usage.Position | Usage.Normal);
+                6, 5, foodMat, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
         models.add(foodModel);
         foodInstance = new ModelInstance(foodModel);
         foodInstance.transform.setToTranslation(0, 1.25f, 0);
@@ -567,6 +572,7 @@ public class GameScreen extends InputAdapter implements Screen {
     public void resize(int width, int height) {
         camera.viewportWidth = width;
         camera.viewportHeight = height;
+        camera.updateProjectionMatrix();
         camera.update();
     }
 
