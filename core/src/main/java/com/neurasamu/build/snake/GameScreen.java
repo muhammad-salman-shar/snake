@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
@@ -121,6 +122,9 @@ public class GameScreen extends InputAdapter implements Screen {
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.45f, 0.45f, 0.55f, 1f));
         environment.add(new DirectionalLight().set(1f, 1f, 1f, -0.5f, -1f, -0.2f));
         environment.add(new DirectionalLight().set(0.9f, 0.2f, 0.6f, 0.8f, -0.6f, 0.5f));
+        PointLight pLight = new PointLight();
+        pLight.set(0.16f, 1f, 0.69f, 10f, 0f, 0f, 0f);
+        environment.add(pLight);
         PointLight pLight = new PointLight();
         pLight.set(0.16f, 1f, 0.69f, 10f, 0f, 0f, 0f);
         environment.add(pLight);
