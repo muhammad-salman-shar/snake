@@ -4,7 +4,9 @@
         android:allowBackup="true"
         android:icon="@android:drawable/ic_menu_myplaces"
         android:label="NeuraSnake"
-        android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+        android:extractNativeLibs="true"
+        android:hardwareAccelerated="true">
         <activity
             android:name=".AndroidLauncher"
             android:exported="true"

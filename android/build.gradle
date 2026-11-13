@@ -2,6 +2,12 @@ apply plugin: 'com.android.application'
 
 android {
     namespace 'com.neurasamu.build.snake'
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
     compileSdk 34
     defaultConfig {
         applicationId "com.neurasamu.build.snake"
