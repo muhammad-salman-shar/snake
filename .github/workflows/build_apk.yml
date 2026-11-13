@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Native Android APK
 
 on:
   push:
@@ -12,12 +12,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup Java (for Android)
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
@@ -26,24 +21,14 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Capacitor Dependencies
-        run: npm install
-
-      - name: Add Android Platform
-        run: npx cap add android
-
-      - name: Sync Web code to Android
-        run: npx cap sync android
-
-      - name: Build APK
+      - name: Build Native APK with Gradle
         run: |
-          cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew android:assembleDebug
 
-      - name: Upload APK Artifact
+      - name: Upload Native APK
         uses: actions/upload-artifact@v4
         with:
-          name: NeonViper-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: NeonViper-Native-APK
+          path: android/build/outputs/apk/debug/android-debug.apk
           if-no-files-found: error
