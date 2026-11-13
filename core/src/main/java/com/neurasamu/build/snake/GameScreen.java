@@ -84,7 +84,7 @@ public class GameScreen extends InputAdapter implements Screen {
     private Texture whitePixel;
 
     private ModelInstance groundInstance;
-    private ModelInstance ringInstance;
+    private final Array<ModelInstance> ringInstances = new Array<>();
     private ModelInstance headInstance;
     private ModelInstance foodInstance;
     private final Array<ModelInstance> segments = new Array<>();
@@ -143,16 +143,20 @@ public class GameScreen extends InputAdapter implements Screen {
         models.add(groundModel);
         groundInstance = new ModelInstance(groundModel);
 
-        Material ringMat = new Material(
-                ColorAttribute.createDiffuse(new Color(1f, 0.18f, 0.39f, 1f)),
-                ColorAttribute.createEmissive(new Color(0.7f, 0.08f, 0.2f, 1f)));
-        Model ringModel = mb.createTorus(ARENA_RADIUS * 2f, 0.9f, 96, ringMat,
+        Material postMat = new Material(
+                ColorAttribute.createDiffuse(new Color(1f, 0.33f, 0.53f, 1f)),
+                ColorAttribute.createEmissive(new Color(0.7f, 0.1f, 0.3f, 1f)));
+        Model postModel = mb.createBox(0.5f, 3f, 0.5f, postMat,
                 Usage.Position | Usage.Normal);
-        models.add(ringModel);
-        ringInstance = new ModelInstance(ringModel);
-        ringInstance.transform.idt();
-        ringInstance.transform.translate(0, 0.55f, 0);
-        ringInstance.transform.rotate(Vector3.X, 90f);
+        models.add(postModel);
+        int postCount = 90;
+        for (int i = 0; i < postCount; i++) {
+            float angle = i / (float) postCount * MathUtils.PI2;
+            ModelInstance post = new ModelInstance(postModel);
+            post.transform.setToTranslation(
+                    MathUtils.cos(angle) * ARENA_RADIUS, 1.5f, MathUtils.sin(angle) * ARENA_RADIUS);
+            ringInstances.add(post);
+        }
 
         Material headMat = new Material(
                 ColorAttribute.createDiffuse(new Color(0.16f, 1f, 0.69f, 1f)),
@@ -170,8 +174,8 @@ public class GameScreen extends InputAdapter implements Screen {
         for (int i = 0; i < SEGMENT_POOL; i++) {
             ModelInstance mi = new ModelInstance(segModel);
             float hue = 0.42f - (i % 40) * 0.006f;
-            Color diffuse = Color.HSVtoColor(hue, 0.85f, 0.50f);
-            Color emissive = Color.HSVtoColor(hue, 0.90f, 0.24f);
+            Color diffuse = hsvToColor(hue, 0.85f, 0.50f);
+            Color emissive = hsvToColor(hue, 0.90f, 0.24f);
             mi.materials.set(0, new Material(
                     ColorAttribute.createDiffuse(diffuse),
                     ColorAttribute.createEmissive(emissive)));
@@ -188,6 +192,24 @@ public class GameScreen extends InputAdapter implements Screen {
         models.add(foodModel);
         foodInstance = new ModelInstance(foodModel);
         foodInstance.transform.setToTranslation(0, 1.25f, 0);
+    }
+
+    private static Color hsvToColor(float h, float s, float v) {
+        float r, g, b;
+        int i = (int) (h * 6);
+        float f = h * 6 - i;
+        float p = v * (1 - s);
+        float q = v * (1 - f * s);
+        float w = v * (1 - (1 - f) * s);
+        switch (i % 6) {
+            case 0: r = v; g = w; b = p; break;
+            case 1: r = q; g = v; b = p; break;
+            case 2: r = p; g = v; b = w; break;
+            case 3: r = p; g = q; b = v; break;
+            case 4: r = w; g = p; b = v; break;
+            default: r = v; g = p; b = q; break;
+        }
+        return new Color(r, g, b, 1f);
     }
 
     private void resetGame() {
@@ -242,7 +264,7 @@ public class GameScreen extends InputAdapter implements Screen {
         float maxR = ARENA_RADIUS - 8f;
         for (int t = 0; t < 50; t++) {
             float a = MathUtils.random(MathUtils.PI2);
-            float r = MathUtils.sqrt(MathUtils.random()) * maxR;
+            float r = (float) Math.sqrt(MathUtils.random()) * maxR;
             float x = MathUtils.cos(a) * r;
             float z = MathUtils.sin(a) * r;
             float d = (float) Math.hypot(x - headPos.x, z - headPos.z);
@@ -305,7 +327,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
         modelBatch.begin(camera);
         modelBatch.render(groundInstance, environment);
-        modelBatch.render(ringInstance, environment);
+        for (ModelInstance post : ringInstances) modelBatch.render(post, environment);
         modelBatch.render(headInstance, environment);
         modelBatch.render(foodInstance, environment);
         for (int i = 0; i < segments.size; i++) {
@@ -392,7 +414,6 @@ public class GameScreen extends InputAdapter implements Screen {
 
         float targetFov = 60f + (speedMult - 1f) * 10f;
         camera.fieldOfView += (targetFov - camera.fieldOfView) * (5f * dt);
-        camera.updateProjectionMatrix();
 
         camera.lookAt(lookTarget);
         camera.update();
