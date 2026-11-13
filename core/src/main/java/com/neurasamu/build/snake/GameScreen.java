@@ -115,16 +115,12 @@ public class GameScreen extends InputAdapter implements Screen {
         camera.far = 650f;
         camera.position.set(0, CAM_UP, -CAM_BACK);
         camera.lookAt(0, SNAKE_Y + 1.2f, CAM_AHEAD);
-        camera.updateProjectionMatrix();
         camera.update();
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.45f, 0.45f, 0.55f, 1f));
         environment.add(new DirectionalLight().set(1f, 1f, 1f, -0.5f, -1f, -0.2f));
         environment.add(new DirectionalLight().set(0.9f, 0.2f, 0.6f, 0.8f, -0.6f, 0.5f));
-        PointLight pLight = new PointLight();
-        pLight.set(0.16f, 1f, 0.69f, 10f, 0f, 0f, 0f);
-        environment.add(pLight);
         PointLight pLight = new PointLight();
         pLight.set(0.16f, 1f, 0.69f, 10f, 0f, 0f, 0f);
         environment.add(pLight);
@@ -576,7 +572,6 @@ public class GameScreen extends InputAdapter implements Screen {
     public void resize(int width, int height) {
         camera.viewportWidth = width;
         camera.viewportHeight = height;
-        camera.updateProjectionMatrix();
         camera.update();
     }
 
