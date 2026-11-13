@@ -21,10 +21,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: 8.2
+
       - name: Build Native APK with Gradle
-        run: |
-          chmod +x gradlew
-          ./gradlew android:assembleDebug
+        run: gradle android:assembleDebug
 
       - name: Upload Native APK
         uses: actions/upload-artifact@v4
