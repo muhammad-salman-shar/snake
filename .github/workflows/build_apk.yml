@@ -37,6 +37,11 @@ jobs:
       - name: Sync Web to Android
         run: npx cap sync android
 
+      - name: Force Landscape Orientation
+        run: |
+          sed -i 's/android:screenOrientation="portrait"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:screenOrientation="unspecified"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+
       - name: Build APK
         run: |
           cd android

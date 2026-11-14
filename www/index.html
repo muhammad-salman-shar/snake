@@ -491,7 +491,7 @@ const sfx = new SoundFx();
 
 function bootGame(){
 const CFG = {
-  arenaRadius: 50.4, headRadius: 1.30, snakeY: 1.05, baseSpeed: 9.5, maxSpeed: 15.5,
+  arenaRadius: 50.4, headRadius: 1.30, snakeY: 1.30, baseSpeed: 9.5, maxSpeed: 15.5,
   baseTurnRate: 2.65, segSpacing: 0.86, startSegments: 12, growPerFood: 3, foodRadius: 0.95,
   camBack: 14.0, camUp: 9.2, camAhead: 6.0, camLag: 6.5, lookLag: 9.0
 };
@@ -500,7 +500,7 @@ let sensitivity = parseFloat(safeGetStorage('neon_viper_sens', '1.0'));
 if (!isFinite(sensitivity)) sensitivity = 1.0;
 
 const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setPixelRatio(1); // Max FPS for low devices
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -536,7 +536,7 @@ function makeMoonTexture(){
   const g = x.createRadialGradient(108, 100, 12, 128, 128, 150);
   g.addColorStop(0, '#fdfeff'); g.addColorStop(0.55, '#e8f0fb'); g.addColorStop(1, '#c2d4ea');
   x.fillStyle = g; x.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 26; i++){
+  for (let i = 0; i < 12; i++){
     const a = Math.random() * Math.PI * 2; const d = Math.random() * 105;
     const px = 128 + Math.cos(a) * d, py = 128 + Math.sin(a) * d; const rr = 3 + Math.random() * 17;
     const cg = x.createRadialGradient(px, py, 1, px, py, rr);
@@ -562,7 +562,7 @@ const starMat = new THREE.ShaderMaterial({
 });
 
 (function createStars(){
-  const starCount = 1500, bandCount = 650, dustCount = 130;
+  const starCount = 300, bandCount = 100, dustCount = 20;
   const total = starCount + bandCount + dustCount;
   const pos = new Float32Array(total * 3), size = new Float32Array(total), phase = new Float32Array(total), col = new Float32Array(total * 3);
   const palette = [[1,1,1],[1,1,1],[1,1,1],[0.68,0.80,1],[1,0.88,0.70],[0.62,1,0.90],[1,0.74,0.86]];
@@ -617,7 +617,7 @@ scene.add(new THREE.Mesh(new THREE.SphereGeometry(820, 48, 32), auroraMat));
   const mat = new THREE.MeshStandardMaterial({ color: 0x101c34, emissive: 0x061022, roughness: 0.85, metalness: 0.2, flatShading: true, fog: false });
   const ridgeMat = new THREE.MeshBasicMaterial({ color: 0x1d4e7a, wireframe: true, transparent: true, opacity: 0.18, fog: false });
   const group = new THREE.Group();
-  for (let i = 0; i < 26; i++){
+  for (let i = 0; i < 12; i++){
     const a = (i / 26) * Math.PI * 2 + Math.random() * 0.18; const dist = 150 + Math.random() * 110; const h = 16 + Math.random() * 38; const r = 18 + Math.random() * 30;
     const geo = new THREE.ConeGeometry(r, h, 5);
     const cone = new THREE.Mesh(geo, mat); cone.position.set(Math.cos(a) * dist, h * 0.5 - 1.5, Math.sin(a) * dist); cone.rotation.y = Math.random() * Math.PI; group.add(cone);
@@ -696,7 +696,7 @@ headGroup.add(new THREE.Mesh(new THREE.SphereGeometry(CFG.headRadius, 26, 20), n
 })();
 headGroup.add(new THREE.PointLight(0x2bffb0, 26, 22, 2));
 
-const SEG_GEO = new THREE.SphereGeometry(1, 14, 10); const segments = [];
+const SEG_GEO = new THREE.SphereGeometry(1, 8, 6); const segments = [];
 function ensureSegments(n){
   while (segments.length < n){
     const i = segments.length, hue = 0.42 - (i % 40) * 0.006;
@@ -708,7 +708,7 @@ function ensureSegments(n){
 
 const foodGroup = new THREE.Group(); scene.add(foodGroup);
 const foodMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(CFG.foodRadius, 0), new THREE.MeshStandardMaterial({ color:0xffd166, emissive:0xff8a00, emissiveIntensity:2.2, roughness:0.25, metalness:0.35 }));
-foodMesh.position.y = 1.25; foodGroup.add(foodMesh);
+foodMesh.position.y = 1.30; foodGroup.add(foodMesh);
 const foodLight = new THREE.PointLight(0xffaa33, 22, 20, 2); foodLight.position.y = 1.4; foodGroup.add(foodLight);
 const halo = new THREE.Mesh(new THREE.RingGeometry(1.35, 2.05, 32), new THREE.MeshBasicMaterial({ color:0xffbb44, transparent:true, opacity:0.35, side:THREE.DoubleSide, depthWrite:false }));
 halo.rotation.x = -Math.PI / 2; halo.position.y = 0.03; foodGroup.add(halo);
@@ -817,18 +817,18 @@ function updateCamera(dt){
   const kLook = 1 - Math.exp(-CFG.lookLag * dt);
   lookTarget.x += (tX - lookTarget.x) * kLook; lookTarget.y += (tY - lookTarget.y) * kLook; lookTarget.z += (tZ - lookTarget.z) * kLook;
   const targetFov = 60 + (state.speedMult - 1.0) * 8; camera.fov += (targetFov - camera.fov) * (5.0 * dt); camera.updateProjectionMatrix();
-  camera.up.set(0, 1, 0); camera.lookAt(lookTarget); camera.rotateZ(-state.turnInput * 0.032 * sensitivity);
+  camera.up.set(0, 1, 0); camera.lookAt(lookTarget); // Removed camera tilt for stable ground view
   if (shake > 0){ shake = Math.max(0, shake - dt * 1.6); const s = shake * shake * 1.6; camera.position.x += (Math.random() - 0.5) * s; camera.position.y += (Math.random() - 0.5) * s; camera.position.z += (Math.random() - 0.5) * s; }
 }
 function onEat(){
   sfx.playEat(); state.score++; state.segmentCount += CFG.growPerFood;
-  burst(foodGroup.position.x, 1.3, foodGroup.position.z, 0xffd166, 20, 15); burst(foodGroup.position.x, 1.3, foodGroup.position.z, 0xff8a00, 12, 10);
+  burst(foodGroup.position.x, 1.3, foodGroup.position.z, 0xffd166, 8, 10); burst(foodGroup.position.x, 1.3, foodGroup.position.z, 0xff8a00, 5, 8);
   currentSpeed = Math.min(CFG.maxSpeed, currentSpeed + 0.22); spawnFood(); updateHUD();
 }
 function onGameOver(){
   if (state.mode !== 'playing') return;
   state.mode = 'over'; state.turnInput = 0; state.speedMult = 1.0; resetControlsVisuals(); sfx.playCrash();
-  burst(state.headPos.x, CFG.snakeY, state.headPos.z, 0x2bffb0, 36, 20); burst(state.headPos.x, CFG.snakeY, state.headPos.z, 0xff2e64, 24, 16);
+  burst(state.headPos.x, CFG.snakeY, state.headPos.z, 0x2bffb0, 15, 15); burst(state.headPos.x, CFG.snakeY, state.headPos.z, 0xff2e64, 10, 12);
   ringMat.color.copy(COLOR_RED_WARN); wallMat.color.copy(COLOR_RED_WARN); postsMat.color.copy(COLOR_RED_WARN); wallMat.opacity = 0.26; shake = 0.75;
   if (state.score > state.best){ state.best = state.score; safeSetStorage('neon_viper_best', state.best); }
   updateHUD(); setTimeout(() => showStartOverlay('over'), 550);
@@ -929,19 +929,48 @@ function resetControlsVisuals() {
   steeringActive = false; steeringTouchId = null; wheelAngleDeg = 0; applyWheelVisuals();
 }
 
-throttleControl.addEventListener('touchstart', (e) => { e.preventDefault(); if (state.mode !== 'playing') return; sfx.init(); if (e.changedTouches.length > 0 && !throttleActive) { const t = e.changedTouches[0]; throttleActive = true; throttleTouchId = t.identifier; updateThrottleFromClientY(t.clientY); } }, { passive: false });
-steeringControl.addEventListener('touchstart', (e) => { e.preventDefault(); if (e.changedTouches.length > 0 && !steeringActive) { const t = e.changedTouches[0]; startSteeringWheel(t.clientX, t.clientY, t.identifier); } }, { passive: false });
-window.addEventListener('touchmove', (e) => {
-  if (!throttleActive && !steeringActive) return;
-  for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (throttleActive && t.identifier === throttleTouchId) updateThrottleFromClientY(t.clientY); if (steeringActive && t.identifier === steeringTouchId) moveSteeringWheel(t.clientX, t.clientY); }
-}, { passive: true });
-function handleGlobalTouchEnd(e) { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (throttleActive && t.identifier === throttleTouchId) releaseThrottle(); if (steeringActive && t.identifier === steeringTouchId) releaseSteeringWheel(); } }
-window.addEventListener('touchend', handleGlobalTouchEnd); window.addEventListener('touchcancel', handleGlobalTouchEnd);
+// --- POINTER EVENTS (MULTI-TOUCH SUPPORT) ---
+throttleControl.addEventListener('pointerdown', (e) => {
+  if (state.mode !== 'playing') return;
+  e.preventDefault();
+  sfx.init();
+  if (throttleTouchId === null) {
+    throttleActive = true;
+    throttleTouchId = e.pointerId;
+    updateThrottleFromClientY(e.clientY);
+  }
+});
 
-throttleControl.addEventListener('mousedown', (e) => { if (state.mode !== 'playing') return; sfx.init(); throttleActive = true; throttleTouchId = null; updateThrottleFromClientY(e.clientY); });
-steeringControl.addEventListener('mousedown', (e) => { startSteeringWheel(e.clientX, e.clientY, null); });
-window.addEventListener('mousemove', (e) => { if (throttleActive && throttleTouchId === null) updateThrottleFromClientY(e.clientY); if (steeringActive && steeringTouchId === null) moveSteeringWheel(e.clientX, e.clientY); });
-window.addEventListener('mouseup', () => { if (throttleActive && throttleTouchId === null) releaseThrottle(); if (steeringActive && steeringTouchId === null) releaseSteeringWheel(); });
+steeringControl.addEventListener('pointerdown', (e) => {
+  if (state.mode !== 'playing') return;
+  e.preventDefault();
+  if (steeringTouchId === null) {
+    startSteeringWheel(e.clientX, e.clientY, e.pointerId);
+  }
+});
+
+window.addEventListener('pointermove', (e) => {
+  if (!throttleActive && !steeringActive) return;
+  if (throttleActive && e.pointerId === throttleTouchId) {
+    updateThrottleFromClientY(e.clientY);
+  }
+  if (steeringActive && e.pointerId === steeringTouchId) {
+    moveSteeringWheel(e.clientX, e.clientY);
+  }
+});
+
+window.addEventListener('pointerup', (e) => {
+  if (throttleActive && e.pointerId === throttleTouchId) {
+    releaseThrottle();
+  }
+  if (steeringActive && e.pointerId === steeringTouchId) {
+    releaseSteeringWheel();
+  }
+});
+window.addEventListener('pointercancel', (e) => {
+  if (throttleActive && e.pointerId === throttleTouchId) releaseThrottle();
+  if (steeringActive && e.pointerId === steeringTouchId) releaseSteeringWheel();
+});
 
 const keys = {};
 window.addEventListener('keydown', (e) => { keys[e.key] = true; if (e.key === ' ' || e.key === 'Enter') { if (state.mode !== 'playing' && !settingsOverlay.classList.contains('show')) startGame(); } });
@@ -1014,13 +1043,13 @@ function updateGame(dt){
     }
   }
   headGroup.position.copy(state.headPos); headGroup.rotation.y = state.yaw;
-  foodMesh.rotation.y += dt * 2.4; foodMesh.rotation.x += dt * 1.1; foodMesh.position.y = 1.25 + Math.sin(gameTime * 3.2) * 0.28; halo.rotation.z -= dt * 1.6; halo.scale.setScalar(1 + Math.sin(gameTime * 3.6) * 0.10);
+  foodMesh.rotation.y += dt * 2.4; foodMesh.rotation.x += dt * 1.1; foodMesh.position.y = 1.30 + Math.sin(gameTime * 3.2) * 0.28; halo.rotation.z -= dt * 1.6; halo.scale.setScalar(1 + Math.sin(gameTime * 3.6) * 0.10);
   foodPop = Math.min(1, foodPop + dt * 4.5); const popEase = 1 - Math.pow(1 - foodPop, 3); foodGroup.scale.setScalar(0.2 + popEase * 0.8);
   updateParticles(dt); updateCamera(dt);
 }
 const clock = new THREE.Clock();
 function animate(){ requestAnimationFrame(animate); const dt = Math.min(clock.getDelta(), 0.05); updateGame(dt); renderer.render(scene, camera); }
-function onResize(){ camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setSize(window.innerWidth, window.innerHeight); starMat.uniforms.uScale.value = 560 * Math.min(window.devicePixelRatio || 1, 2); }
+function onResize(){ camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(1); // Max FPS for low devices renderer.setSize(window.innerWidth, window.innerHeight); starMat.uniforms.uScale.value = 560 * Math.min(window.devicePixelRatio || 1, 2); }
 window.addEventListener('resize', onResize); window.addEventListener('orientationchange', () => setTimeout(onResize, 200));
 resetGame(); updateHUD(); showStartOverlay('start'); animate();
 }
