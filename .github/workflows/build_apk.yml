@@ -39,8 +39,14 @@ jobs:
 
       - name: Force Landscape Orientation
         run: |
-          sed -i 's/android:screenOrientation="portrait"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
-          sed -i 's/android:screenOrientation="unspecified"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+          python3 -c "
+import xml.etree.ElementTree as ET
+tree = ET.parse('android/app/src/main/AndroidManifest.xml')
+root = tree.getroot()
+for activity in root.findall('.//activity'):
+    activity.set('{http://schemas.android.com/apk/res/android}screenOrientation', 'sensorLandscape')
+tree.write('android/app/src/main/AndroidManifest.xml')
+" 
 
       - name: Build APK
         run: |

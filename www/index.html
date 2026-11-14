@@ -611,7 +611,7 @@ const auroraMat = new THREE.ShaderMaterial({
   fragmentShader: `uniform float uTime; varying vec3 vDir; float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); } float noise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f); return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y); } float fbm(vec2 p){ float v = 0.0, a = 0.55; for (int i = 0; i < 3; i++){ v += a * noise(p); p = p * 2.15 + vec2(11.7, 5.3); a *= 0.5; } return v; } void main(){ float h = vDir.y; float az = atan(vDir.z, vDir.x); float t = uTime * 0.06; float n = fbm(vec2(az * 2.4 + t, h * 2.0 - t * 1.4)); float curtain = 0.55 + 0.45 * sin(az * 38.0 + n * 14.0 + uTime * 0.35); float band = smoothstep(0.45, 0.62, n); float vert = smoothstep(0.10, 0.38, h) * smoothstep(0.88, 0.35, h); float i = band * vert * curtain * 0.6; vec3 col = mix(vec3(0.05, 0.85, 0.55), vec3(0.35, 0.25, 0.95), clamp(n * 1.3 - 0.25, 0.0, 1.0)); col = mix(col, vec3(0.75, 0.25, 0.8), smoothstep(0.5, 0.8, h) * 0.35); gl_FragColor = vec4(col * i, 1.0); }`,
   side: THREE.BackSide, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false
 });
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(820, 48, 32), auroraMat));
+// Aurora disabled for max FPS
 
 (function createMountains(){
   const mat = new THREE.MeshStandardMaterial({ color: 0x101c34, emissive: 0x061022, roughness: 0.85, metalness: 0.2, flatShading: true, fog: false });
@@ -781,7 +781,9 @@ function resetGame(){
   spawnFood(); updateBody(); updateHUD(); snapCamera();
 }
 function startGame(){
-  sfx.init(); if (gyroEnabled) calibrateGyro(); resetGame(); state.mode = 'playing'; hideStartOverlay();
+  try {
+    sfx.init(); if (gyroEnabled) calibrateGyro(); resetGame(); state.mode = 'playing'; hideStartOverlay();
+  } catch (err) { showFatal(err.message); }
 }
 function spawnFood(){
   const maxR = CFG.arenaRadius - 8; let x = 0, z = 0;
@@ -817,7 +819,7 @@ function updateCamera(dt){
   const kLook = 1 - Math.exp(-CFG.lookLag * dt);
   lookTarget.x += (tX - lookTarget.x) * kLook; lookTarget.y += (tY - lookTarget.y) * kLook; lookTarget.z += (tZ - lookTarget.z) * kLook;
   const targetFov = 60 + (state.speedMult - 1.0) * 8; camera.fov += (targetFov - camera.fov) * (5.0 * dt); camera.updateProjectionMatrix();
-  camera.up.set(0, 1, 0); camera.lookAt(lookTarget); // Removed camera tilt for stable ground view
+  camera.up.set(0, 1, 0); camera.lookAt(lookTarget); camera.updateProjectionMatrix();
   if (shake > 0){ shake = Math.max(0, shake - dt * 1.6); const s = shake * shake * 1.6; camera.position.x += (Math.random() - 0.5) * s; camera.position.y += (Math.random() - 0.5) * s; camera.position.z += (Math.random() - 0.5) * s; }
 }
 function onEat(){
@@ -1022,7 +1024,7 @@ startBtn.addEventListener('click', triggerStart); startBtn.addEventListener('tou
 
 function updateGame(dt){
   gameTime += dt;
-  starMat.uniforms.uTime.value = gameTime; auroraMat.uniforms.uTime.value = gameTime; updateMeteors(dt);
+  starMat.uniforms.uTime.value = gameTime; auroraMat.uniforms.uTime.value = gameTime; // Meteors disabled for max FPS
   const gpState = pollGamepad();
   if (state.mode === 'playing'){
     updateCockpitControls(dt, gpState);
