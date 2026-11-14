@@ -1,0 +1,8 @@
+{
+  "appId": "com.neurasamu.build.snake",
+  "appName": "NeuraSnake",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

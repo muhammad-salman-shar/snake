@@ -1,4 +1,4 @@
-name: Build Native Android APK
+name: Build Android APK
 
 on:
   push:
@@ -12,7 +12,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
@@ -23,17 +28,24 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
-        with:
-          gradle-version: 8.2
+      - name: Install Dependencies
+        run: npm install
 
-      - name: Build Native APK with Gradle
-        run: gradle android:assembleDebug
+      - name: Add Android Platform
+        run: npx cap add android
 
-      - name: Upload Native APK
+      - name: Sync Web to Android
+        run: npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NeonViper-Native-APK
-          path: android/build/outputs/apk/debug/android-debug.apk
+          name: NeuraSnake-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
