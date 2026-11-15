@@ -43,10 +43,9 @@ jobs:
       - name: Sync Web to Android
         run: npx cap sync android
 
-      - name: Force Landscape Orientation
+      - name: Force Landscape
         run: |
-          sed -i 's/android:screenOrientation="portrait"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
-          sed -i 's/android:screenOrientation="unspecified"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+          python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('android/app/src/main/AndroidManifest.xml'); root = tree.getroot(); [activity.set('{http://schemas.android.com/apk/res/android}screenOrientation', 'sensorLandscape') for activity in root.findall('.//activity')]; tree.write('android/app/src/main/AndroidManifest.xml')"
 
       - name: Build APK
         run: |
