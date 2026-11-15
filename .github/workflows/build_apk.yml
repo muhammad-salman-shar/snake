@@ -31,11 +31,8 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Download Three.js Locally
-        run: |
-          curl -sL https://unpkg.com/three@0.152.2/build/three.min.js -o www/three.min.js
-          ls -lh www/three.min.js
-          if [ ! -s www/three.min.js ]; then echo "Three.js download failed!"; exit 1; fi
+      - name: Download Three.js
+        run: curl -sL https://unpkg.com/three@0.152.2/build/three.min.js -o www/three.min.js
 
       - name: Add Android Platform
         run: npx cap add android
@@ -45,7 +42,7 @@ jobs:
 
       - name: Force Landscape
         run: |
-          python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('android/app/src/main/AndroidManifest.xml'); root = tree.getroot(); [activity.set('{http://schemas.android.com/apk/res/android}screenOrientation', 'sensorLandscape') for activity in root.findall('.//activity')]; tree.write('android/app/src/main/AndroidManifest.xml')"
+          sed -i 's/<activity /<activity android:screenOrientation="sensorLandscape" /g' android/app/src/main/AndroidManifest.xml
 
       - name: Build APK
         run: |

@@ -327,6 +327,26 @@
     } catch (err) { console.log(err); }
   });
 </script>
+
+<script>
+  window.triggerStart = function(e) {
+    if (e) e.preventDefault();
+    if (typeof window.startGame === 'function') { window.startGame(); }
+    else { alert('3D engine loading... Please wait.'); }
+  };
+  document.addEventListener('deviceready', async () => {
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins) {
+        if (window.Capacitor.Plugins.ScreenOrientation) {
+          await window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
+        }
+        if (window.Capacitor.Plugins.StatusBar) {
+          await window.Capacitor.Plugins.StatusBar.hide();
+        }
+      }
+    } catch (err) { console.log(err); }
+  });
+</script>
 </head>
 <body>
 
@@ -799,7 +819,7 @@ function resetGame(){
 window.startGame = window.startGame = function() {
   try {
     sfx.init(); if (gyroEnabled) calibrateGyro(); resetGame(); state.mode = 'playing'; hideStartOverlay();
-};
+};;
 catch (err) { showFatal(err.message); }
 };
 function spawnFood(){
