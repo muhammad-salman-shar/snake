@@ -64,7 +64,7 @@
     position:fixed;inset:0;z-index:30;
     display:flex;align-items:center;justify-content:center;padding:20px;
     background:radial-gradient(circle at 50% 45%,rgba(6,22,40,.65),rgba(2,4,10,.88));
-    /* Removed blur for max FPS */
+    /* Removed blur for FPS */
     opacity:0;pointer-events:none;transition:opacity .3s ease;touch-action:none;
   }
   .modal-overlay.show{opacity:1;pointer-events:auto;}
@@ -304,12 +304,8 @@
   document.addEventListener('deviceready', async () => {
     try {
       if (window.Capacitor && window.Capacitor.Plugins) {
-        if (window.Capacitor.Plugins.ScreenOrientation) {
-          await window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
-        }
-        if (window.Capacitor.Plugins.StatusBar) {
-          await window.Capacitor.Plugins.StatusBar.hide();
-        }
+        if (window.Capacitor.Plugins.ScreenOrientation) await window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
+        if (window.Capacitor.Plugins.StatusBar) await window.Capacitor.Plugins.StatusBar.hide();
       }
     } catch (err) { console.log(err); }
   });
@@ -352,7 +348,7 @@
       <div class="bigscore" id="ovScore">0</div>
       <div class="lbl">FINAL SCORE</div>
     </div>
-    <button class="btn-action" id="startBtn" onclick="startGame()">START VIPER</button>
+    <button class="btn-action" id="startBtn">START VIPER</button>
   </div>
 </div>
 
@@ -454,13 +450,9 @@ const fatalEl = document.getElementById('fatal');
 function showFatal(msg){ fatalEl.textContent = '⚠ ' + msg; fatalEl.classList.add('show'); }
 window.addEventListener('error', function(e){ if (e && e.message) showFatal(e.message); });
 
-// THREE.js is loaded locally via script tag
 window.addEventListener('load', () => {
-  if (window.THREE) {
-    try { bootGame(); } catch(err){ showFatal(err.message); }
-  } else {
-    showFatal('3D Engine failed to load locally. Please reinstall the app.');
-  }
+  if (window.THREE) { try { bootGame(); } catch(err){ showFatal(err.message); } }
+  else { showFatal('Engine load failed.'); }
 });
 class SoundFx {
   constructor() { this.ctx = null; this.muted = false; }
@@ -503,7 +495,7 @@ let sensitivity = parseFloat(safeGetStorage('neon_viper_sens', '1.0'));
 if (!isFinite(sensitivity)) sensitivity = 1.0;
 
 const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
-renderer.setPixelRatio(1); // Max FPS for low devices
+renderer.setPixelRatio(1);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -614,7 +606,7 @@ const auroraMat = new THREE.ShaderMaterial({
   fragmentShader: `uniform float uTime; varying vec3 vDir; float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); } float noise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f); return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y); } float fbm(vec2 p){ float v = 0.0, a = 0.55; for (int i = 0; i < 3; i++){ v += a * noise(p); p = p * 2.15 + vec2(11.7, 5.3); a *= 0.5; } return v; } void main(){ float h = vDir.y; float az = atan(vDir.z, vDir.x); float t = uTime * 0.06; float n = fbm(vec2(az * 2.4 + t, h * 2.0 - t * 1.4)); float curtain = 0.55 + 0.45 * sin(az * 38.0 + n * 14.0 + uTime * 0.35); float band = smoothstep(0.45, 0.62, n); float vert = smoothstep(0.10, 0.38, h) * smoothstep(0.88, 0.35, h); float i = band * vert * curtain * 0.6; vec3 col = mix(vec3(0.05, 0.85, 0.55), vec3(0.35, 0.25, 0.95), clamp(n * 1.3 - 0.25, 0.0, 1.0)); col = mix(col, vec3(0.75, 0.25, 0.8), smoothstep(0.5, 0.8, h) * 0.35); gl_FragColor = vec4(col * i, 1.0); }`,
   side: THREE.BackSide, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false
 });
-// Aurora disabled for max FPS
+// Aurora disabled for FPS
 
 (function createMountains(){
   const mat = new THREE.MeshStandardMaterial({ color: 0x101c34, emissive: 0x061022, roughness: 0.85, metalness: 0.2, flatShading: true, fog: false });
@@ -783,12 +775,9 @@ function resetGame(){
   headGroup.position.set(0, CFG.snakeY, 0); headGroup.rotation.set(0, 0, 0);
   spawnFood(); updateBody(); updateHUD(); snapCamera();
 }
-window.startGame = function startGame() {
-  try {
-    sfx.init(); if (gyroEnabled) calibrateGyro(); resetGame(); state.mode = 'playing'; hideStartOverlay();
-};
-catch (err) { showFatal(err.message); }
-};
+function startGame(){
+  sfx.init(); if (gyroEnabled) calibrateGyro(); resetGame(); state.mode = 'playing'; hideStartOverlay();
+}
 function spawnFood(){
   const maxR = CFG.arenaRadius - 8; let x = 0, z = 0;
   for (let t = 0; t < 50; t++){ const a = Math.random() * Math.PI * 2; const r = Math.sqrt(Math.random()) * maxR; x = Math.cos(a) * r; z = Math.sin(a) * r; if (Math.hypot(x - state.headPos.x, z - state.headPos.z) > 15) break; }
@@ -823,18 +812,18 @@ function updateCamera(dt){
   const kLook = 1 - Math.exp(-CFG.lookLag * dt);
   lookTarget.x += (tX - lookTarget.x) * kLook; lookTarget.y += (tY - lookTarget.y) * kLook; lookTarget.z += (tZ - lookTarget.z) * kLook;
   const targetFov = 60 + (state.speedMult - 1.0) * 8; camera.fov += (targetFov - camera.fov) * (5.0 * dt); camera.updateProjectionMatrix();
-  camera.up.set(0, 1, 0); camera.lookAt(lookTarget); camera.updateProjectionMatrix();
+  camera.up.set(0, 1, 0); camera.lookAt(lookTarget); // Removed camera tilt
   if (shake > 0){ shake = Math.max(0, shake - dt * 1.6); const s = shake * shake * 1.6; camera.position.x += (Math.random() - 0.5) * s; camera.position.y += (Math.random() - 0.5) * s; camera.position.z += (Math.random() - 0.5) * s; }
 }
 function onEat(){
   sfx.playEat(); state.score++; state.segmentCount += CFG.growPerFood;
-  burst(foodGroup.position.x, 1.3, foodGroup.position.z, 0xffd166, 8, 10); burst(foodGroup.position.x, 1.3, foodGroup.position.z, 0xff8a00, 5, 8);
+  burst(foodGroup.position.x, 1.3, foodGroup.position.z, 0xffd166, 20, 15); burst(foodGroup.position.x, 1.3, foodGroup.position.z, 0xff8a00, 12, 10);
   currentSpeed = Math.min(CFG.maxSpeed, currentSpeed + 0.22); spawnFood(); updateHUD();
 }
 function onGameOver(){
   if (state.mode !== 'playing') return;
   state.mode = 'over'; state.turnInput = 0; state.speedMult = 1.0; resetControlsVisuals(); sfx.playCrash();
-  burst(state.headPos.x, CFG.snakeY, state.headPos.z, 0x2bffb0, 15, 15); burst(state.headPos.x, CFG.snakeY, state.headPos.z, 0xff2e64, 10, 12);
+  burst(state.headPos.x, CFG.snakeY, state.headPos.z, 0x2bffb0, 36, 20); burst(state.headPos.x, CFG.snakeY, state.headPos.z, 0xff2e64, 24, 16);
   ringMat.color.copy(COLOR_RED_WARN); wallMat.color.copy(COLOR_RED_WARN); postsMat.color.copy(COLOR_RED_WARN); wallMat.opacity = 0.26; shake = 0.75;
   if (state.score > state.best){ state.best = state.score; safeSetStorage('neon_viper_best', state.best); }
   updateHUD(); setTimeout(() => showStartOverlay('over'), 550);
@@ -935,48 +924,28 @@ function resetControlsVisuals() {
   steeringActive = false; steeringTouchId = null; wheelAngleDeg = 0; applyWheelVisuals();
 }
 
-// --- POINTER EVENTS (MULTI-TOUCH SUPPORT) ---
+// --- MULTI-TOUCH FIX ---
 throttleControl.addEventListener('pointerdown', (e) => {
   if (state.mode !== 'playing') return;
-  e.preventDefault();
-  sfx.init();
-  if (throttleTouchId === null) {
-    throttleActive = true;
-    throttleTouchId = e.pointerId;
-    updateThrottleFromClientY(e.clientY);
-  }
+  e.preventDefault(); sfx.init();
+  if (throttleTouchId === null) { throttleActive = true; throttleTouchId = e.pointerId; updateThrottleFromClientY(e.clientY); }
 });
-
 steeringControl.addEventListener('pointerdown', (e) => {
   if (state.mode !== 'playing') return;
   e.preventDefault();
-  if (steeringTouchId === null) {
-    startSteeringWheel(e.clientX, e.clientY, e.pointerId);
-  }
+  if (steeringTouchId === null) { startSteeringWheel(e.clientX, e.clientY, e.pointerId); }
 });
-
 window.addEventListener('pointermove', (e) => {
   if (!throttleActive && !steeringActive) return;
-  if (throttleActive && e.pointerId === throttleTouchId) {
-    updateThrottleFromClientY(e.clientY);
-  }
-  if (steeringActive && e.pointerId === steeringTouchId) {
-    moveSteeringWheel(e.clientX, e.clientY);
-  }
+  if (throttleActive && e.pointerId === throttleTouchId) updateThrottleFromClientY(e.clientY);
+  if (steeringActive && e.pointerId === steeringTouchId) moveSteeringWheel(e.clientX, e.clientY);
 });
-
-window.addEventListener('pointerup', (e) => {
-  if (throttleActive && e.pointerId === throttleTouchId) {
-    releaseThrottle();
-  }
-  if (steeringActive && e.pointerId === steeringTouchId) {
-    releaseSteeringWheel();
-  }
-});
-window.addEventListener('pointercancel', (e) => {
+function handlePointerEnd(e) {
   if (throttleActive && e.pointerId === throttleTouchId) releaseThrottle();
   if (steeringActive && e.pointerId === steeringTouchId) releaseSteeringWheel();
-});
+}
+window.addEventListener('pointerup', handlePointerEnd);
+window.addEventListener('pointercancel', handlePointerEnd);
 
 const keys = {};
 window.addEventListener('keydown', (e) => { keys[e.key] = true; if (e.key === ' ' || e.key === 'Enter') { if (state.mode !== 'playing' && !settingsOverlay.classList.contains('show')) startGame(); } });
@@ -1022,16 +991,13 @@ closeSettingsBtn.addEventListener('click', () => { settingsOverlay.classList.rem
 const muteBtn = document.getElementById('muteBtn'), audioOnIcon = document.getElementById('audioOnIcon'), audioOffIcon = document.getElementById('audioOffIcon');
 muteBtn.addEventListener('click', () => { sfx.muted = !sfx.muted; audioOnIcon.style.display = sfx.muted ? 'none' : 'block'; audioOffIcon.style.display = sfx.muted ? 'block' : 'none'; });
 
-// Start button is handled globally
-
-// Fallback: Tap anywhere on the start overlay to start
-startOverlay.addEventListener('pointerdown', (e) => {
-  if (state.mode !== 'playing') triggerStart(e);
-});
+let lastStartTap = 0;
+function triggerStart(e) { if (e && e.cancelable) e.preventDefault(); const now = performance.now(); if (now - lastStartTap < 300) return; lastStartTap = now; if (state.mode !== 'playing') startGame(); }
+startBtn.addEventListener('click', triggerStart); startBtn.addEventListener('touchstart', triggerStart, { passive: false });
 
 function updateGame(dt){
   gameTime += dt;
-  starMat.uniforms.uTime.value = gameTime; auroraMat.uniforms.uTime.value = gameTime; // Meteors disabled for max FPS
+  starMat.uniforms.uTime.value = gameTime; auroraMat.uniforms.uTime.value = gameTime; // Meteors disabled for FPS
   const gpState = pollGamepad();
   if (state.mode === 'playing'){
     updateCockpitControls(dt, gpState);
@@ -1058,26 +1024,10 @@ function updateGame(dt){
 }
 const clock = new THREE.Clock();
 function animate(){ requestAnimationFrame(animate); const dt = Math.min(clock.getDelta(), 0.05); updateGame(dt); renderer.render(scene, camera); }
-function onResize(){ camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(1); // Max FPS for low devices renderer.setSize(window.innerWidth, window.innerHeight); starMat.uniforms.uScale.value = 560 * Math.min(window.devicePixelRatio || 1, 2); }
+function onResize(){ camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(1); renderer.setSize(window.innerWidth, window.innerHeight); starMat.uniforms.uScale.value = 560 * Math.min(window.devicePixelRatio || 1, 2); }
 window.addEventListener('resize', onResize); window.addEventListener('orientationchange', () => setTimeout(onResize, 200));
 resetGame(); updateHUD(); showStartOverlay('start'); animate();
 }
-
-// Global Start Button Logic (Prevents freeze if 3D engine fails)
-function triggerStart(e) { 
-  if (e && e.cancelable) e.preventDefault(); 
-  if (typeof window.startGame === 'function') {
-    window.startGame(); 
-  } else {
-    document.getElementById('ovTitle').innerText = "LOADING...";
-    document.getElementById('ovSub').innerHTML = "3D Engine connect ho raha hai.<br>Internet check karein.";
-    setTimeout(() => window.location.reload(), 1500);
-  }
-}
-document.getElementById('startBtn').addEventListener('click', triggerStart); 
-document.getElementById('startBtn').addEventListener('touchstart', triggerStart, { passive: false });
-document.getElementById('startOverlay').addEventListener('pointerdown', triggerStart);
-
 </script>
 </body>
 </html>
