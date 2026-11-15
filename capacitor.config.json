@@ -2,6 +2,9 @@
   "appId": "com.neurasamu.build.snake",
   "appName": "NeuraSnake",
   "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  },
   "server": {
     "androidScheme": "https"
   },

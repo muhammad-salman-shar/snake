@@ -10,7 +10,7 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{
-    position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;overflow:hidden;
+    position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;overflow:hidden;position:fixed;top:0;left:0;
     background:#04070f;touch-action:none;overscroll-behavior:none;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     user-select:none;-webkit-user-select:none;
@@ -300,12 +300,26 @@
   #fatal.show{display:flex;}
 </style>
 
+
 <script>
+  window.triggerStart = function() {
+    if (typeof window.startGameFn === 'function') {
+      window.startGameFn();
+    } else {
+      alert("Game engine abhi load ho raha hai. Kripya 1 second wait karein.");
+    }
+  };
+
   document.addEventListener('deviceready', async () => {
     try {
       if (window.Capacitor && window.Capacitor.Plugins) {
-        if (window.Capacitor.Plugins.ScreenOrientation) await window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
-        if (window.Capacitor.Plugins.StatusBar) await window.Capacitor.Plugins.StatusBar.hide();
+        if (window.Capacitor.Plugins.ScreenOrientation) {
+          await window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
+        }
+        if (window.Capacitor.Plugins.StatusBar) {
+          await window.Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: true });
+          await window.Capacitor.Plugins.StatusBar.hide();
+        }
       }
     } catch (err) { console.log(err); }
   });
@@ -348,7 +362,7 @@
       <div class="bigscore" id="ovScore">0</div>
       <div class="lbl">FINAL SCORE</div>
     </div>
-    <button class="btn-action" id="startBtn">START VIPER</button>
+    <button class="btn-action" id="startBtn" onclick="window.triggerStart()">START VIPER</button>
   </div>
 </div>
 
@@ -1065,6 +1079,7 @@ function animate(){ requestAnimationFrame(animate); const dt = Math.min(clock.ge
 function onResize(){ camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setPixelRatio(1); renderer.setSize(window.innerWidth, window.innerHeight); starMat.uniforms.uScale.value = 560 * Math.min(window.devicePixelRatio || 1, 2); }
 window.addEventListener('resize', onResize); window.addEventListener('orientationchange', () => setTimeout(onResize, 200));
 resetGame(); updateHUD(); showStartOverlay('start'); animate();
+  window.startGameFn = startGame;
 }
 </script>
 </body>
