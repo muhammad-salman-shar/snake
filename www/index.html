@@ -850,45 +850,35 @@ function handleDeviceMotion(e) {
   if (!g || (g.x === null && g.y === null && g.z === null)) return;
   gyroHasData = true;
 
-  const angle = (window.screen && window.screen.orientation && typeof window.screen.orientation.angle === 'number') ? window.screen.orientation.angle : (typeof window.orientation === 'number' ? window.orientation : 0);
-
-  let currentGy = g.y;
-  let currentGx = g.x;
-  
-  // If OS rotates to landscape, swap axes. If Portrait-locked (0), use raw g.y
-  if (angle === 90 || angle === -90 || angle === 270) {
-    currentGy = -g.x;
-    currentGx = g.y;
-  }
-
-  if (gyroMotionNeedsCalib || gyroNeedsCalib) {
-    neutralGy = currentGy;
+  if (gyroNeedsCalib) {
+    neutralGy = g.y;
     neutralPitch = Math.atan2(g.z, Math.hypot(g.x, g.y));
-    gyroMotionNeedsCalib = false;
     gyroNeedsCalib = false;
-    gyroBaseSteer = 0;
-    gyroBasePitch = 0;
   }
 
-  // Steering (Left/Right Corners)
-  let rawSteer = currentGy - neutralGy;
+  // --- 1. Steering (Left/Right) ---
+  let rawSteer = g.y - neutralGy;
+  const angle = (window.screen && window.screen.orientation && typeof window.screen.orientation.angle === 'number') ? window.screen.orientation.angle : (typeof window.orientation === 'number' ? window.orientation : 0);
+  if (angle === 270 || angle === -90) {
+    rawSteer = -rawSteer;
+  }
+  
   if (Math.abs(rawSteer) < 0.4) rawSteer = 0;
   const steerInput = Math.max(-1, Math.min(1, rawSteer / 5.5));
 
-  // Speed (Top Edge Away vs Toward Player)
+  // --- 2. Speed (Top edge away vs toward) ---
   const currentPitch = Math.atan2(g.z, Math.hypot(g.x, g.y));
   let pitchDelta = currentPitch - neutralPitch;
   if (Math.abs(pitchDelta) < 0.05) pitchDelta = 0;
   const throttleInput = Math.max(-1, Math.min(1, pitchDelta / 0.45));
 
-  // Map back to degrees for existing updateCockpitControls logic
-  if (steerInput === 0) gyroRawSteer = 0;
-  else gyroRawSteer = steerInput * 28.5 + Math.sign(steerInput) * 2.5;
-
-  if (throttleInput === 0) gyroRawPitch = 0;
-  else gyroRawPitch = throttleInput * 28.5 + Math.sign(throttleInput) * 2.5;
+  // Direct output to raw variables (bypassing old math)
+  gyroRawSteer = steerInput;
+  gyroRawPitch = throttleInput;
 }
-function calibrateGyro() { if (gyroHasData) { gyroBaseSteer = gyroRawSteer; gyroBasePitch = gyroRawPitch; } else { gyroNeedsCalib = true; } }
+function calibrateGyro() {
+  gyroNeedsCalib = true;
+} else { gyroNeedsCalib = true; } }
 function updateGyroUI() { gyroHudBtn.classList.toggle('active', gyroEnabled); gyroModalToggleBtn.classList.toggle('active', gyroEnabled); gyroModalToggleBtn.textContent = gyroEnabled ? 'GYRO TILT: ON' : 'GYRO TILT: OFF'; refreshCtrlBadge(); }
 function toggleGyro() {
   if (!gyroEnabled) {
@@ -989,10 +979,9 @@ window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 function updateCockpitControls(dt, gpState) {
   let gyroSteerNorm = 0, gyroThrottleNorm = 0;
   if (gyroEnabled && gyroHasData) {
-    const dSteer = gyroRawSteer - gyroBaseSteer, dPitch = gyroRawPitch - gyroBasePitch;
-    if (Math.abs(dSteer) > 3.0) gyroSteerNorm = Math.max(-1, Math.min(1, (dSteer - Math.sign(dSteer) * 3.0) / 35.0));
-    if (Math.abs(dPitch) > 3.0) gyroThrottleNorm = Math.max(-1, Math.min(1, (dPitch - Math.sign(dPitch) * 3.0) / 35.0));
-  }
+        gyroSteerNorm = gyroRawSteer;
+        gyroThrottleNorm = gyroRawPitch;
+      }
   const keyUp = keys['ArrowUp'] || keys['w'] || keys['W'], keyDown = keys['ArrowDown'] || keys['s'] || keys['S'];
   if (!throttleActive) {
     if (gpState && Math.abs(gpState.throttle) > 0.05) applyThrottleNorm(gpState.throttle);
