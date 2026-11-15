@@ -10,7 +10,7 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{
-    position:fixed;inset:0;width:100%;height:100%;overflow:hidden;
+    position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;overflow:hidden;
     background:#04070f;touch-action:none;overscroll-behavior:none;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     user-select:none;-webkit-user-select:none;
@@ -299,6 +299,13 @@
   }
   #fatal.show{display:flex;}
 </style>
+<script>
+  document.addEventListener('deviceready', () => {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
+      window.Capacitor.Plugins.StatusBar.hide();
+    }
+  });
+</script>
 </head>
 <body>
 
@@ -1048,16 +1055,14 @@ resetGame(); updateHUD(); showStartOverlay('start'); animate();
 }
 
 // Global Start Button Logic (Prevents freeze if 3D engine fails)
-let lastStartTap = 0;
 function triggerStart(e) { 
   if (e && e.cancelable) e.preventDefault(); 
-  const now = performance.now(); 
-  if (now - lastStartTap < 300) return; 
-  lastStartTap = now; 
-  if (window.startGame) {
+  if (typeof window.startGame === 'function') {
     window.startGame(); 
   } else {
-    showFatal('Game engine is not ready.');
+    document.getElementById('ovTitle').innerText = "LOADING...";
+    document.getElementById('ovSub').innerHTML = "3D Engine connect ho raha hai.<br>Internet check karein.";
+    setTimeout(() => window.location.reload(), 1500);
   }
 }
 document.getElementById('startBtn').addEventListener('click', triggerStart); 

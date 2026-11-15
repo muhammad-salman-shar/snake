@@ -41,9 +41,13 @@ jobs:
       - name: Sync Web to Android
         run: npx cap sync android
 
-      - name: Force Landscape Orientation
+      - name: Force Landscape & Fullscreen
         run: |
-          sed -i 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:screenOrientation="portrait"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:screenOrientation="unspecified"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+          # Hide status bar via theme
+          sed -i 's/Theme.AppCompat.Light.NoActionBar/Theme.AppCompat.NoActionBar.Fullscreen/g' android/app/src/main/res/values/styles.xml 2>/dev/null || true
+          sed -i 's/AppTheme.NoActionBar/Theme.AppCompat.NoActionBar.Fullscreen/g' android/app/src/main/AndroidManifest.xml
 
       - name: Build APK
         run: |
