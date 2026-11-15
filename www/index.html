@@ -306,6 +306,27 @@
     }
   });
 </script>
+
+<script>
+  window.onerror = function(msg) { alert("GAME ERROR: " + msg); return false; };
+  window.triggerStart = function(e) {
+    if (e) e.preventDefault();
+    if (typeof window.startGame === 'function') { window.startGame(); }
+    else { alert("3D engine load nahi hua. App ko restart karein."); }
+  };
+  document.addEventListener('deviceready', async () => {
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins) {
+        if (window.Capacitor.Plugins.ScreenOrientation) {
+          await window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
+        }
+        if (window.Capacitor.Plugins.StatusBar) {
+          await window.Capacitor.Plugins.StatusBar.hide();
+        }
+      }
+    } catch (err) { console.log(err); }
+  });
+</script>
 </head>
 <body>
 
@@ -344,7 +365,7 @@
       <div class="bigscore" id="ovScore">0</div>
       <div class="lbl">FINAL SCORE</div>
     </div>
-    <button class="btn-action" id="startBtn">START VIPER</button>
+    <button class="btn-action" id="startBtn" onclick="triggerStart(event)">START VIPER</button>
   </div>
 </div>
 
@@ -775,10 +796,11 @@ function resetGame(){
   headGroup.position.set(0, CFG.snakeY, 0); headGroup.rotation.set(0, 0, 0);
   spawnFood(); updateBody(); updateHUD(); snapCamera();
 }
-window.startGame = function startGame(){
+window.startGame = window.startGame = function() {
   try {
     sfx.init(); if (gyroEnabled) calibrateGyro(); resetGame(); state.mode = 'playing'; hideStartOverlay();
-  } catch (err) { showFatal(err.message); }
+};
+catch (err) { showFatal(err.message); }
 };
 function spawnFood(){
   const maxR = CFG.arenaRadius - 8; let x = 0, z = 0;
