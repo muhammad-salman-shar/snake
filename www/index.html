@@ -839,32 +839,35 @@ const steeringCaption = document.getElementById('steeringCaption');
 let throttleActive  = false; let throttleTouchId = null; let throttleOffsetY = 0; const MAX_THROTTLE_PX = 52; let wasBoosting = false;
 let steeringActive  = false; let steeringTouchId = null; let prevTouchAngle  = 0; let wheelAngleDeg   = 0; const MAX_WHEEL_DEG = 360;
 
-let gyroEnabled = false; let gyroHasData = false; let gyroRawSteer = 0; let gyroRawPitch = 0; let gyroBaseSteer = 0; let gyroBasePitch = 40; let gyroNeedsCalib = true;
+let gyroEnabled = false; let gyroHasData = false; let gyroRawSteer = 0; let gyroRawPitch = 0; let gyroBaseSteer = 0; let gyroBasePitch = 0; let gyroNeedsCalib = true;
 const gyroHudBtn = document.getElementById('gyroHudBtn');
 const gyroModalToggleBtn = document.getElementById('gyroModalToggleBtn');
 const gyroCalibrateBtn = document.getElementById('gyroCalibrateBtn');
 
 function getScreenOrientationAngle() { if (window.screen && window.screen.orientation && typeof window.screen.orientation.angle === 'number') return window.screen.orientation.angle; return typeof window.orientation === 'number' ? window.orientation : 0; }
 function handleDeviceOrientation(e) {
-  if (e.gamma === null && e.beta === null) return; 
+  if (e.beta === null && e.gamma === null) return;
   gyroHasData = true;
-  const beta = e.beta || 0, gamma = e.gamma || 0, orient = getScreenOrientationAngle();
-  
-  if (orient === 90) { // Landscape Left
-    gyroRawSteer = -gamma;   // Left/Right tilt = steering (inverted to fix direction)
-    gyroRawPitch = -beta;    // Up/Down tilt = speed
-  } else if (orient === -90 || orient === 270) { // Landscape Right
-    gyroRawSteer = -gamma;   // Left/Right tilt = steering
-    gyroRawPitch = -beta;    // Up/Down tilt = speed
-  } else { // Portrait
+  const beta = e.beta || 0;
+  const gamma = e.gamma || 0;
+  const angle = (window.screen && window.screen.orientation && typeof window.screen.orientation.angle === 'number') ? window.screen.orientation.angle : (typeof window.orientation === 'number' ? window.orientation : 0);
+
+  if (angle === 0 || angle === 180) {
+    // Portrait-locked WebView: hardware axes are swapped because player physically holds landscape
+    gyroRawSteer = -beta;
+    gyroRawPitch = gamma;
+  } else if (angle === 90) {
+    gyroRawSteer = -gamma;
+    gyroRawPitch = beta;
+  } else {
     gyroRawSteer = gamma;
     gyroRawPitch = beta;
   }
-  
-  if (gyroNeedsCalib) { 
-    gyroBaseSteer = gyroRawSteer; 
-    gyroBasePitch = gyroRawPitch; 
-    gyroNeedsCalib = false; 
+
+  if (gyroNeedsCalib) {
+    gyroBaseSteer = gyroRawSteer;
+    gyroBasePitch = gyroRawPitch;
+    gyroNeedsCalib = false;
   }
 }
 function calibrateGyro() { if (gyroHasData) { gyroBaseSteer = gyroRawSteer; gyroBasePitch = gyroRawPitch; } else { gyroNeedsCalib = true; } }
@@ -969,8 +972,8 @@ function updateCockpitControls(dt, gpState) {
   let gyroSteerNorm = 0, gyroThrottleNorm = 0;
   if (gyroEnabled && gyroHasData) {
     const dSteer = gyroRawSteer - gyroBaseSteer, dPitch = gyroRawPitch - gyroBasePitch;
-    if (Math.abs(dSteer) > 2.5) gyroSteerNorm = Math.max(-1, Math.min(1, (dSteer - Math.sign(dSteer) * 2.5) / 26));
-    if (Math.abs(dPitch) > 4.0) gyroThrottleNorm = Math.max(-1, Math.min(1, -(dPitch - Math.sign(dPitch) * 4.0) / 22));
+    if (Math.abs(dSteer) > 3.0) gyroSteerNorm = Math.max(-1, Math.min(1, (dSteer - Math.sign(dSteer) * 3.0) / 35.0));
+    if (Math.abs(dPitch) > 3.0) gyroThrottleNorm = Math.max(-1, Math.min(1, (dPitch - Math.sign(dPitch) * 3.0) / 35.0));
   }
   const keyUp = keys['ArrowUp'] || keys['w'] || keys['W'], keyDown = keys['ArrowDown'] || keys['s'] || keys['S'];
   if (!throttleActive) {
