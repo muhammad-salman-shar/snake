@@ -851,11 +851,11 @@ function handleDeviceOrientation(e) {
   const beta = e.beta || 0, gamma = e.gamma || 0, orient = getScreenOrientationAngle();
   
   if (orient === 90) { // Landscape Left
-    gyroRawSteer = gamma;
-    gyroRawPitch = beta;
+    gyroRawSteer = -gamma;  // Left tilt (negative gamma) = Left steer
+    gyroRawPitch = -beta;   // Top back (negative beta) = Boost
   } else if (orient === -90 || orient === 270) { // Landscape Right
-    gyroRawSteer = -gamma;
-    gyroRawPitch = beta;
+    gyroRawSteer = gamma;   // Right tilt (positive gamma) = Right steer
+    gyroRawPitch = -beta;   // Top back (negative beta) = Boost
   } else { // Portrait
     gyroRawSteer = gamma;
     gyroRawPitch = beta;
@@ -1015,7 +1015,7 @@ function updateGame(dt){
   const gpState = pollGamepad();
   if (state.mode === 'playing'){
     updateCockpitControls(dt, gpState);
-    state.yaw += state.turnInput * CFG.baseTurnRate * sensitivity * dt;
+    state.yaw -= state.turnInput * CFG.baseTurnRate * sensitivity * dt;
     const speedNow = currentSpeed * state.speedMult; const fx = Math.sin(state.yaw), fz = Math.cos(state.yaw);
     state.headPos.x += fx * speedNow * dt; state.headPos.z += fz * speedNow * dt; state.headPos.y = CFG.snakeY;
     trail.push({ x: state.headPos.x, z: state.headPos.z }); if (trail.length > 4000) trail.splice(0, 2000);
@@ -1045,7 +1045,7 @@ function updateGame(dt){
       if (Math.hypot(fdx, fdz) < CFG.headRadius + CFG.foodRadius + 0.25) onEat();
     }
   }
-  headGroup.position.copy(state.headPos); headGroup.rotation.y = -state.yaw;
+  headGroup.position.copy(state.headPos); headGroup.rotation.y = state.yaw;
   foodMesh.rotation.y += dt * 2.4; foodMesh.rotation.x += dt * 1.1; foodMesh.position.y = 1.30 + Math.sin(gameTime * 3.2) * 0.28; halo.rotation.z -= dt * 1.6; halo.scale.setScalar(1 + Math.sin(gameTime * 3.6) * 0.10);
   foodPop = Math.min(1, foodPop + dt * 4.5); const popEase = 1 - Math.pow(1 - foodPop, 3); foodGroup.scale.setScalar(0.2 + popEase * 0.8);
   updateParticles(dt); updateCamera(dt);
