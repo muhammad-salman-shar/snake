@@ -34,7 +34,7 @@ jobs:
       - name: Download Three.js Locally
         run: |
           mkdir -p www/js
-          curl -sL https://unpkg.com/three@0.152.2/build/three.min.js -o www/js/three.min.js
+          curl -sL "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" -o www/js/three.min.js
 
       - name: Add Android Platform
         run: npx cap add android
