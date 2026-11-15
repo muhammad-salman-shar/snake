@@ -31,6 +31,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      - name: Download Three.js Locally
+        run: |
+          curl -sL https://unpkg.com/three@0.152.2/build/three.min.js -o www/three.min.js
+
       - name: Add Android Platform
         run: npx cap add android
 
@@ -39,8 +43,7 @@ jobs:
 
       - name: Force Landscape Orientation
         run: |
-          sed -i 's/android:screenOrientation="portrait"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
-          sed -i 's/android:screenOrientation="unspecified"/android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="sensorLandscape"/g' android/app/src/main/AndroidManifest.xml
 
       - name: Build APK
         run: |

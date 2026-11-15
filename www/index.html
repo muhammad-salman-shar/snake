@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#04070f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>NEON VIPER 3D - Dual Cockpit Edition</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="three.min.js"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{
@@ -439,26 +439,14 @@ const fatalEl = document.getElementById('fatal');
 function showFatal(msg){ fatalEl.textContent = '⚠ ' + msg; fatalEl.classList.add('show'); }
 window.addEventListener('error', function(e){ if (e && e.message) showFatal(e.message); });
 
-(function loadThree(){
-  const sources = [
-    'https://unpkg.com/three@0.152.2/build/three.min.js',
-    'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
-  ];
-  let idx = 0;
-  function tryNext(){
-    if (idx >= sources.length){ showFatal('Unable to load 3D engine. Please check network connection and reload.'); return; }
-    const script = document.createElement('script');
-    script.src = sources[idx++];
-    script.onload = function(){
-      if (window.THREE) { try { bootGame(); } catch(err){ showFatal(err.message); } } else tryNext();
-    };
-    script.onerror = tryNext;
-    document.head.appendChild(script);
+// THREE.js is loaded locally via script tag
+window.addEventListener('load', () => {
+  if (window.THREE) {
+    try { bootGame(); } catch(err){ showFatal(err.message); }
+  } else {
+    showFatal('3D Engine failed to load locally. Please reinstall the app.');
   }
-  tryNext();
-})();
-
+});
 class SoundFx {
   constructor() { this.ctx = null; this.muted = false; }
   init() { if (!this.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) this.ctx = new AC(); } if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); }
@@ -780,11 +768,11 @@ function resetGame(){
   headGroup.position.set(0, CFG.snakeY, 0); headGroup.rotation.set(0, 0, 0);
   spawnFood(); updateBody(); updateHUD(); snapCamera();
 }
-function startGame(){
+window.startGame = function startGame(){
   try {
     sfx.init(); if (gyroEnabled) calibrateGyro(); resetGame(); state.mode = 'playing'; hideStartOverlay();
   } catch (err) { showFatal(err.message); }
-}
+};
 function spawnFood(){
   const maxR = CFG.arenaRadius - 8; let x = 0, z = 0;
   for (let t = 0; t < 50; t++){ const a = Math.random() * Math.PI * 2; const r = Math.sqrt(Math.random()) * maxR; x = Math.cos(a) * r; z = Math.sin(a) * r; if (Math.hypot(x - state.headPos.x, z - state.headPos.z) > 15) break; }
@@ -1018,9 +1006,8 @@ closeSettingsBtn.addEventListener('click', () => { settingsOverlay.classList.rem
 const muteBtn = document.getElementById('muteBtn'), audioOnIcon = document.getElementById('audioOnIcon'), audioOffIcon = document.getElementById('audioOffIcon');
 muteBtn.addEventListener('click', () => { sfx.muted = !sfx.muted; audioOnIcon.style.display = sfx.muted ? 'none' : 'block'; audioOffIcon.style.display = sfx.muted ? 'block' : 'none'; });
 
-let lastStartTap = 0;
-function triggerStart(e) { if (e && e.cancelable) e.preventDefault(); const now = performance.now(); if (now - lastStartTap < 300) return; lastStartTap = now; if (state.mode !== 'playing') startGame(); }
-startBtn.addEventListener('click', triggerStart); startBtn.addEventListener('touchstart', triggerStart, { passive: false });
+// Start button is handled globally
+
 // Fallback: Tap anywhere on the start overlay to start
 startOverlay.addEventListener('pointerdown', (e) => {
   if (state.mode !== 'playing') triggerStart(e);
@@ -1059,6 +1046,24 @@ function onResize(){ camera.aspect = window.innerWidth / window.innerHeight; cam
 window.addEventListener('resize', onResize); window.addEventListener('orientationchange', () => setTimeout(onResize, 200));
 resetGame(); updateHUD(); showStartOverlay('start'); animate();
 }
+
+// Global Start Button Logic (Prevents freeze if 3D engine fails)
+let lastStartTap = 0;
+function triggerStart(e) { 
+  if (e && e.cancelable) e.preventDefault(); 
+  const now = performance.now(); 
+  if (now - lastStartTap < 300) return; 
+  lastStartTap = now; 
+  if (window.startGame) {
+    window.startGame(); 
+  } else {
+    showFatal('Game engine is not ready.');
+  }
+}
+document.getElementById('startBtn').addEventListener('click', triggerStart); 
+document.getElementById('startBtn').addEventListener('touchstart', triggerStart, { passive: false });
+document.getElementById('startOverlay').addEventListener('pointerdown', triggerStart);
+
 </script>
 </body>
 </html>
