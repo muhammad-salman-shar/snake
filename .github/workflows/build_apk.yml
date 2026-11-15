@@ -31,11 +31,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Download Three.js
+      - name: Download Three.js Locally
         run: |
-          curl -sL https://unpkg.com/three@0.152.2/build/three.min.js -o www/three.min.js
-          ls -lh www/three.min.js
-          if [ ! -s www/three.min.js ]; then echo 'Three.js failed'; exit 1; fi
+          mkdir -p www/js
+          curl -sL https://unpkg.com/three@0.152.2/build/three.min.js -o www/js/three.min.js
 
       - name: Add Android Platform
         run: npx cap add android
@@ -45,7 +44,7 @@ jobs:
 
       - name: Force Landscape
         run: |
-          sed -i 's/<activity android:screenOrientation="sensorLandscape" /<activity android:screenOrientation="sensorLandscape" android:screenOrientation="sensorLandscape" /g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/<activity /<activity android:screenOrientation="sensorLandscape" /g' android/app/src/main/AndroidManifest.xml
 
       - name: Build APK
         run: |
