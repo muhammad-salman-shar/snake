@@ -851,11 +851,11 @@ function handleDeviceOrientation(e) {
   const beta = e.beta || 0, gamma = e.gamma || 0, orient = getScreenOrientationAngle();
   
   if (orient === 90) { // Landscape Left
-    gyroRawSteer = -beta;   // Left/Right physical tilt is now beta
-    gyroRawPitch = -gamma;  // Up/Down physical tilt is now gamma
+    gyroRawSteer = -gamma;   // Left/Right tilt = steering (inverted to fix direction)
+    gyroRawPitch = -beta;    // Up/Down tilt = speed
   } else if (orient === -90 || orient === 270) { // Landscape Right
-    gyroRawSteer = beta;    // Left/Right physical tilt is now beta
-    gyroRawPitch = -gamma;  // Up/Down physical tilt is now gamma
+    gyroRawSteer = -gamma;   // Left/Right tilt = steering
+    gyroRawPitch = -beta;    // Up/Down tilt = speed
   } else { // Portrait
     gyroRawSteer = gamma;
     gyroRawPitch = beta;
