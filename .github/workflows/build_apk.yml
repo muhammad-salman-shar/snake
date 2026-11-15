@@ -32,7 +32,10 @@ jobs:
         run: npm install
 
       - name: Download Three.js
-        run: curl -sL https://unpkg.com/three@0.152.2/build/three.min.js -o www/three.min.js
+        run: |
+          curl -sL https://unpkg.com/three@0.152.2/build/three.min.js -o www/three.min.js
+          ls -lh www/three.min.js
+          if [ ! -s www/three.min.js ]; then echo 'Three.js failed'; exit 1; fi
 
       - name: Add Android Platform
         run: npx cap add android

@@ -307,32 +307,15 @@
   });
 </script>
 
-<script>
-  window.onerror = function(msg) { alert("GAME ERROR: " + msg); return false; };
-  window.triggerStart = function(e) {
-    if (e) e.preventDefault();
-    if (typeof window.startGame === 'function') { window.startGame(); }
-    else { alert("3D engine load nahi hua. App ko restart karein."); }
-  };
-  document.addEventListener('deviceready', async () => {
-    try {
-      if (window.Capacitor && window.Capacitor.Plugins) {
-        if (window.Capacitor.Plugins.ScreenOrientation) {
-          await window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
-        }
-        if (window.Capacitor.Plugins.StatusBar) {
-          await window.Capacitor.Plugins.StatusBar.hide();
-        }
-      }
-    } catch (err) { console.log(err); }
-  });
-</script>
 
 <script>
   window.triggerStart = function(e) {
     if (e) e.preventDefault();
-    if (typeof window.startGame === 'function') { window.startGame(); }
-    else { alert('3D engine loading... Please wait.'); }
+    if (typeof window.startGame === 'function') {
+      window.startGame();
+    } else {
+      window.location.reload(); // Auto reload if engine failed to load
+    }
   };
   document.addEventListener('deviceready', async () => {
     try {
