@@ -299,24 +299,8 @@
   }
   #fatal.show{display:flex;}
 </style>
-<script>
-  document.addEventListener('deviceready', () => {
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
-      window.Capacitor.Plugins.StatusBar.hide();
-    }
-  });
-</script>
-
 
 <script>
-  window.triggerStart = function(e) {
-    if (e) e.preventDefault();
-    if (typeof window.startGame === 'function') {
-      window.startGame();
-    } else {
-      window.location.reload(); // Auto reload if engine failed to load
-    }
-  };
   document.addEventListener('deviceready', async () => {
     try {
       if (window.Capacitor && window.Capacitor.Plugins) {
@@ -368,7 +352,7 @@
       <div class="bigscore" id="ovScore">0</div>
       <div class="lbl">FINAL SCORE</div>
     </div>
-    <button class="btn-action" id="startBtn" onclick="triggerStart(event)">START VIPER</button>
+    <button class="btn-action" id="startBtn" onclick="startGame()">START VIPER</button>
   </div>
 </div>
 
@@ -799,10 +783,10 @@ function resetGame(){
   headGroup.position.set(0, CFG.snakeY, 0); headGroup.rotation.set(0, 0, 0);
   spawnFood(); updateBody(); updateHUD(); snapCamera();
 }
-window.startGame = window.startGame = function() {
+window.startGame = function startGame() {
   try {
     sfx.init(); if (gyroEnabled) calibrateGyro(); resetGame(); state.mode = 'playing'; hideStartOverlay();
-};;
+};
 catch (err) { showFatal(err.message); }
 };
 function spawnFood(){

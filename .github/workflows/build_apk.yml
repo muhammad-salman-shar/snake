@@ -45,7 +45,7 @@ jobs:
 
       - name: Force Landscape
         run: |
-          sed -i 's/<activity /<activity android:screenOrientation="sensorLandscape" /g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/<activity android:screenOrientation="sensorLandscape" /<activity android:screenOrientation="sensorLandscape" android:screenOrientation="sensorLandscape" /g' android/app/src/main/AndroidManifest.xml
 
       - name: Build APK
         run: |
