@@ -1006,6 +1006,20 @@ function updateGame(dt){
     state.headPos.x += fx * speedNow * dt; state.headPos.z += fz * speedNow * dt; state.headPos.y = CFG.snakeY;
     trail.push({ x: state.headPos.x, z: state.headPos.z }); if (trail.length > 4000) trail.splice(0, 2000);
     updateBody();
+    // --- SELF COLLISION START ---
+    for (let i = 8; i < state.segmentCount; i++) {
+      if (i >= segments.length) break;
+      const seg = segments[i];
+      if (seg.visible) {
+        const dx = state.headPos.x - seg.position.x;
+        const dz = state.headPos.z - seg.position.z;
+        if (Math.hypot(dx, dz) < CFG.headRadius * 1.25) {
+          onGameOver(); break;
+        }
+      }
+    }
+    // --- SELF COLLISION END ---
+
     const distFromCenter = Math.hypot(state.headPos.x, state.headPos.z); const distToWall = CFG.arenaRadius - distFromCenter;
     if (distToWall < 11) {
       const dangerRatio = Math.max(0, Math.min(1, (11 - distToWall) / 6.5));
