@@ -64,7 +64,7 @@
     position:fixed;inset:0;z-index:30;
     display:flex;align-items:center;justify-content:center;padding:20px;
     background:radial-gradient(circle at 50% 45%,rgba(6,22,40,.65),rgba(2,4,10,.88));
-    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    /* Removed blur for max FPS */
     opacity:0;pointer-events:none;transition:opacity .3s ease;touch-action:none;
   }
   .modal-overlay.show{opacity:1;pointer-events:auto;}
@@ -1021,6 +1021,10 @@ muteBtn.addEventListener('click', () => { sfx.muted = !sfx.muted; audioOnIcon.st
 let lastStartTap = 0;
 function triggerStart(e) { if (e && e.cancelable) e.preventDefault(); const now = performance.now(); if (now - lastStartTap < 300) return; lastStartTap = now; if (state.mode !== 'playing') startGame(); }
 startBtn.addEventListener('click', triggerStart); startBtn.addEventListener('touchstart', triggerStart, { passive: false });
+// Fallback: Tap anywhere on the start overlay to start
+startOverlay.addEventListener('pointerdown', (e) => {
+  if (state.mode !== 'playing') triggerStart(e);
+});
 
 function updateGame(dt){
   gameTime += dt;
